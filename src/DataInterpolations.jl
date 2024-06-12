@@ -55,6 +55,8 @@ function (interp::AbstractInterpolation)(u::AbstractVector, t::AbstractVector)
     u
 end
 
+Base.broadcastable(interp::AbstractInterpolation) = Ref(interp)
+
 const EXTRAPOLATION_ERROR = "Cannot extrapolate as `extrapolate` keyword passed was `false`"
 struct ExtrapolationError <: Exception end
 function Base.showerror(io::IO, e::ExtrapolationError)
