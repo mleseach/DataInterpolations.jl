@@ -3,7 +3,7 @@ module DataInterpolationsOptimExt
 using DataInterpolations
 import DataInterpolations: munge_data,
                            Curvefit, CurvefitCache, _interpolate, get_show, derivative,
-                           ExtrapolationError,
+                           ExtrapolationError, _derivative, assert_extrapolate,
                            integral, IntegralNotFoundError, DerivativeNotFoundError
 
 isdefined(Base, :get_extension) ? (using Optim, ForwardDiff) :
@@ -46,12 +46,9 @@ function _interpolate(A::CurvefitCache{<:AbstractVector{<:Number}},
     _interpolate(A, t), i
 end
 
-function derivative(A::CurvefitCache{<:AbstractVector{<:Number}},
-        t::Union{AbstractVector{<:Number}, Number}, order = 1)
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
-    order > 2 && throw(DerivativeNotFoundError())
-    order == 1 && return ForwardDiff.derivative(x -> A.m(x, A.pmin), t)
-    return ForwardDiff.derivative(t -> ForwardDiff.derivative(x -> A.m(x, A.pmin), t), t)
+function _derivative(A::CurvefitCache{<:AbstractVector{<:Number}},
+        t::Union{AbstractVector{<:Number}, Number}, iguess)
+    return ForwardDiff.derivative(x -> A.m(x, A.pmin), t)
 end
 
 function get_show(A::CurvefitCache)

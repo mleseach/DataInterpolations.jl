@@ -1,6 +1,7 @@
 function derivative(A, t, order = 1)
     order > 2 && throw(DerivativeNotFoundError())
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
+    assert_extrapolate(A, t)
+
     order == 1 && return _derivative(A, t, firstindex(A.t) - 1)[1]
     return ForwardDiff.derivative(t -> _derivative(A, t, firstindex(A.t) - 1)[1], t)
 end
@@ -38,7 +39,6 @@ function _derivative(A::QuadraticInterpolation{<:AbstractMatrix}, t::Number, igu
 end
 
 function _derivative(A::LagrangeInterpolation{<:AbstractVector}, t::Number)
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
     der = zero(A.u[1])
     for j in eachindex(A.t)
         tmp = zero(A.t[1])
@@ -72,7 +72,6 @@ function _derivative(A::LagrangeInterpolation{<:AbstractVector}, t::Number)
 end
 
 function _derivative(A::LagrangeInterpolation{<:AbstractMatrix}, t::Number)
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
     der = zero(A.u[:, 1])
     for j in eachindex(A.t)
         tmp = zero(A.t[1])
@@ -118,13 +117,11 @@ function _derivative(A::AkimaInterpolation{<:AbstractVector}, t::Number, iguess)
     (@evalpoly wj A.b[i] 2A.c[j] 3A.d[j]), i
 end
 
-function _derivative(A::ConstantInterpolation{<:AbstractVector}, t::Number)
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
+function _derivative(A::ConstantInterpolation{<:AbstractVector}, t::Number, iguess)
     return isempty(searchsorted(A.t, t)) ? zero(A.u[1]) : eltype(A.u)(NaN)
 end
 
-function _derivative(A::ConstantInterpolation{<:AbstractMatrix}, t::Number)
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
+function _derivative(A::ConstantInterpolation{<:AbstractMatrix}, t::Number, iguess)
     return isempty(searchsorted(A.t, t)) ? zero(A.u[:, 1]) : eltype(A.u)(NaN) .* A.u[:, 1]
 end
 
