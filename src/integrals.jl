@@ -1,11 +1,12 @@
 function integral(A::AbstractInterpolation, t::Number)
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
+    assert_extrapolate(A, t)
     integral(A, A.t[1], t)
 end
 
 function integral(A::AbstractInterpolation, t1::Number, t2::Number)
-    ((t1 < A.t[1] || t1 > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
-    ((t2 < A.t[1] || t2 > A.t[end]) && !A.extrapolate) && throw(ExtrapolationError())
+    assert_extrapolate(A, t1)
+    assert_extrapolate(A, t2)
+
     # the index less than or equal to t1
     idx1 = max(1, min(searchsortedlast(A.t, t1), length(A.t) - 1))
     # the index less than t2
