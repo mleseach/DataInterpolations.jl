@@ -3,7 +3,7 @@ module DataInterpolationsRegularizationToolsExt
 using DataInterpolations
 import DataInterpolations: munge_data,
                            _interpolate, RegularizationSmooth, get_show, derivative,
-                           integral
+                           integral, assert_extrapolate
 using LinearAlgebra
 
 isdefined(Base, :get_extension) ? (import RegularizationTools as RT) :
@@ -344,6 +344,12 @@ function _weighting_by_kw(t::AbstractVector, d::Int, wls::Symbol)
     else
         throw("Unknown `$(wls)` keyword used for weighting, use `:midpoint`.")
     end
+end
+
+function assert_extrapolate(A::RegularizationSmooth{
+            <:AbstractVector{<:Number}
+        }, t::Number)
+    assert_extrapolate(A.Aitp, t)
 end
 
 function _interpolate(A::RegularizationSmooth{

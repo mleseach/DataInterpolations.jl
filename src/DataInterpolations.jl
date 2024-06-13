@@ -19,8 +19,28 @@ include("integrals.jl")
 include("online.jl")
 include("show.jl")
 
-(interp::AbstractInterpolation)(t::Number) = _interpolate(interp, t)
-(interp::AbstractInterpolation)(t::Number, i::Integer) = _interpolate(interp, t, i)
+function assert_extrapolate(interp::AbstractInterpolation, t)
+    if interp.extrapolate
+        return
+    end
+
+    if first(interp.t) <= t <= last(interp.t)
+        return
+    end
+
+    throw(ExtrapolationError())
+end
+
+function (interp::AbstractInterpolation)(t::Number)
+    assert_extrapolate(interp, t)
+    _interpolate(interp, t)
+end
+
+function (interp::AbstractInterpolation)(t::Number, i::Integer)
+    assert_extrapolate(interp, t)
+    _interpolate(interp, t, i)
+end
+
 function (interp::AbstractInterpolation)(t::AbstractVector)
     u = get_u(interp.u, t)
     interp(u, t)
@@ -48,9 +68,15 @@ function (interp::AbstractInterpolation)(u::AbstractMatrix, t::AbstractVector)
     u
 end
 function (interp::AbstractInterpolation)(u::AbstractVector, t::AbstractVector)
+    # we only need to check the extrema of t
+    t₀, t₁ = extrema(t)
+
+    assert_extrapolate(interp, t₀)
+    assert_extrapolate(interp, t₁)
+
     iguess = firstindex(interp.t)
     @inbounds for i in eachindex(u, t)
-        u[i], iguess = interp(t[i], iguess)
+        u[i], iguess = _interpolate(interp, t[i], iguess)
     end
     u
 end

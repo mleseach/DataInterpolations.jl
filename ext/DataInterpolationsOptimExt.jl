@@ -37,8 +37,6 @@ end
 # Curvefit
 function _interpolate(A::CurvefitCache{<:AbstractVector{<:Number}},
         t::Union{AbstractVector{<:Number}, Number})
-    ((t < A.t[1] || t > A.t[end]) && !A.extrapolate) &&
-        throw(ExtrapolationError())
     A.m(t, A.pmin)
 end
 
